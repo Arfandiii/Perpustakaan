@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('author', 255); // author VARCHAR(255)
             $table->string('publisher', 255); // publisher VARCHAR(255)
             $table->year('published_year'); // published_year YEAR
-            $table->text('description'); // description TEXT
+            $table->text('description')->nullable(); // description TEXT
             $table->integer('stock'); // stock INT
             $table->string('cover_image', 255)->nullable(); // cover_image VARCHAR(255)
             $table->timestamps(); // created_at TIMESTAMP and updated_at TIMESTAMP

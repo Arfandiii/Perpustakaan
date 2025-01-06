@@ -3,7 +3,7 @@
 @section('title', $title)
 
 @section('content')
-<div class="relative isolate overflow-hidden bg-gray-900 py-24 sm:py-32">
+<div class="relative isolate overflow-hidden bg-gray-900 py-24 sm:py-32 w-screen">
     <img src="{{ asset('assets/img/perpus-3.jpg') }}" alt="perpustakaan"
         class="absolute inset-0 bg-black opacity-20 -z-10 h-full w-full object-cover object-right md:object-center">
     <div class="hidden sm:absolute sm:-top-10 sm:right-1/2 sm:-z-10 sm:mr-10 sm:block sm:transform-gpu sm:blur-3xl"

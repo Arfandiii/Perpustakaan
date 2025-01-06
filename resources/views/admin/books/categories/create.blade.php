@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="content ml-12 transform ease-in-out duration-500 pt-20 px-2 md:px-5 pb-4">
-    {{-- <x-breadcrumb :breadcrumbs="$breadcrumbs"></x-breadcrumb> --}}
+    <x-breadcrumb :breadcrumbs="$breadcrumbs"></x-breadcrumb>
     <div class="p-6 max-w-6xl mx-auto bg-white rounded-lg shadow-md my-10">
         <form action="{{ route('admin.categories.store') }}" method="POST">
             @csrf

@@ -3,12 +3,20 @@
 @section('title', $title)
 
 @section('content')
-<div class="container mx-auto py-10 px-4">
-    <div class="flex flex-col md:flex-row gap-8 shadow-md rounded-lg">
+
+<div class="container py-10 px-4 mx-auto">
+    <!-- Tombol Batal -->
+    <div class="mb-6">
+        <a href="{{ route('catalog') }}"
+            class="bg-gray-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-600 transition">
+            Kembali ke Katalog
+        </a>
+    </div>
+    <div class="flex flex-col md:flex-row gap-8 shadow-md rounded-lg w-full">
         <!-- Bagian Gambar -->
         <div class="flex-shrink-0 w-full md:w-1/2">
             <div class="rounded-lg overflow-hidden sm:py-10">
-                <img src="{{ asset('storage/' . $book->cover_image) ?? asset('images/default-book.png') }}"
+                <img src="{{ $book->cover_image ? asset('storage/'.$book->cover_image) : asset('assets/img/default-book.png') ?? asset('images/default-book.png') }}"
                     alt="{{ $book->title }}" class="w-full sm:w-6/12 h-full object-cover m-auto rounded-md shadow-lg">
             </div>
         </div>
@@ -49,9 +57,15 @@
                     Pinjam Buku
                 </a>
                 @else
+                @if(auth()->user()->role === 'admin')
+                <button
+                    class="bg-purple-500 font-bold px-4 opacity-50 cursor-not-allowed w-full text-white text-lg py-3 rounded-lg">
+                    Anda sebagai admin tidak dapat meminjam buku</button>
+                @else
                 <button
                     class="bg-purple-500 font-bold px-4 opacity-50 cursor-not-allowed w-full text-white text-lg py-3 rounded-lg">
                     Verifikasi email untuk meminjam buku</button>
+                @endif
                 @endif
                 @else
                 <button

@@ -35,4 +35,10 @@ class Book extends Model
     {
         return $this->hasMany(Loan::class);
     }
+
+    // Relasi ke LoanBook
+    public function loanBooks()
+    {
+        return $this->hasMany(LoanBook::class);
+    }
 }

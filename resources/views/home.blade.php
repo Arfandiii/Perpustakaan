@@ -59,16 +59,16 @@
         <!-- Katalog Buku -->
         <section class="mb-8">
             <div class="container mx-auto px-12 sm:px-8">
-                <h2 class="text-center text-2xl font-semibold mb-8 text-white">Katalog Buku Populer</h2>
+                <h2 class="text-center text-2xl font-semibold mb-8 text-white">Katalog Buku Terbaru</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-4">
                     <!-- Buku -->
                     @foreach($books as $book)
                     <div class="bg-white rounded-lg shadow hover:shadow-lg transition">
-                        <img src="{{ asset('storage/' . $book->cover_image ?? 'assets/img/default-book.png') }}"
+                        <img src="{{ $book->cover_image ? asset('storage/'.$book->cover_image) : asset('assets/img/default-book.png') }}"
                             alt="{{ $book->title }}" class="w-full h-48 object-cover rounded-t-lg">
                         <div class="p-4">
                             <h5 class="text-lg font-semibold sm:h-14">{{ Str::limit($book->title, 34) }}</h5>
-                            <p class="text-gray-600 mt-2">{{ $book->author }}</p>
+                            <p class="text-gray-600 my-2 h-12">{{ $book->author }}</p>
                             <a href="{{ route('book.showUser', $book->slug) }}"
                                 class="block bg-purple-500 text-white font-medium text-center py-2 rounded mt-4 hover:bg-purple-600 transition">Detail</a>
                         </div>

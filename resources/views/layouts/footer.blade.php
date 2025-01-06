@@ -1,5 +1,5 @@
 <!-- Footer Section -->
-<footer class="bg-gray-800 text-gray-300 py-8">
+<footer class="bg-gray-800 text-gray-300 py-8 w-screen">
     <div class="footer transform ease-in-out duration-500 pt-20 mx-2 pb-4">
         <div class="container mx-auto">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 px-14 lg:px-16">

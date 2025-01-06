@@ -8,7 +8,7 @@ use Sastrawi\StopWordRemover\StopWordRemoverFactory;
 class TextPreprocessingHelper
 {
     public static function tokenize($text) {
-        return preg_split('/\s+/', strtolower($text));
+        return preg_split('/[\s,\.!?;:()"\'-]+/', strtolower($text));
     }
 
     public static function filterTokens($tokens) {

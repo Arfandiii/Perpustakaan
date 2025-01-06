@@ -139,31 +139,16 @@ class UserController extends Controller
             'phone' => ['nullable', 'string'],
             'dob' => ['nullable', 'date'],
             'edu_level_id' => ['nullable', 'exists:edu_levels,id'], // Kelas/EduLevel
-            'password' => ['nullable', 'string', 'min:8', 'confirmed'], // Password bersifat opsional saat update
-            'profile_picture' => 'nullable|image|file|mimes:jpg,png,jpeg|max:4096'
         ]);
-        // Cek apakah user adalah admin
-        if (Auth::user()->role === 'admin') {
-            // Admin hanya bisa mengubah nama, email, edu_level_id, phone, dan dob
-            $user->update([
-                'name' => $validatedData['name'],
-                'email' => $validatedData['email'],
-                'edu_level_id' => $validatedData['edu_level_id'],
-                'phone' => $validatedData['phone'],
-                'dob' => $validatedData['dob']
-            ]);
-        } else {
-            // Pengguna biasa bisa mengubah semua kolom, termasuk password
-            $picturePath = $request->file('profile_picture')->store('profile', 'public');
-            $user->update([
-                'name' => $validatedData['name'],
-                'email' => $validatedData['email'],
-                'phone' => $validatedData['phone'],
-                'dob' => $validatedData['dob'],
-                'profile_picture' => $picturePath, // Misalnya jika ada opsi untuk mengubah foto profil
-                'password' => $request->password ? Hash::make($request->password) : $user->password,
-            ]);
-        }
+    
+        // Admin hanya bisa mengubah nama, email, edu_level_id, phone, dan dob
+        $user->update([
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'edu_level_id' => $validatedData['edu_level_id'],
+            'phone' => $validatedData['phone'],
+            'dob' => $validatedData['dob']
+        ]);
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil diperbarui.');
     }
@@ -182,5 +167,38 @@ class UserController extends Controller
             return redirect()->route('admin.users.index')
             ->with('error', 'Terjadi kesalahan saat menghapus User: ' . $e->getMessage());
         }
+    }
+
+    public function search(Request $request)
+    {
+        // Mendapatkan nilai pencarian dan filter
+        $searchTerm  = $request->input('search');
+        $title = 'List Pengguna';
+
+        // Breadcrumbs array
+        $breadcrumbs = [
+            ['name' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home'],
+            ['name' => 'Users', 'url' => route('admin.users.index'), 'icon' => 'user-group']
+        ];
+
+        // Jika input kosong, hanya kembalikan tampilan tanpa perhitungan tambahan
+        if (empty($searchTerm )) {
+            return redirect()->route('admin.users.index')->with('error', 'Silakan masukkan kata kunci pencarian.');
+        }
+
+        // Menentukan query pencarianr
+        $users = User::where(function ($query) use ($searchTerm) {
+            $query->where('name', 'like', '%' . $searchTerm . '%')
+                ->orWhere('email', 'like', '%' . $searchTerm . '%')
+                ->orWhere('phone', 'like', '%' . $searchTerm . '%')
+                ->orWhereHas('eduLevel', function ($subQuery) use ($searchTerm) {
+                    $subQuery->where('name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('email', 'like', '%' . $searchTerm . '%');
+                });
+        })
+        ->with('eduLevel') // Memuat relasi untuk efisiensi
+        ->paginate(10);
+
+        return view('admin.users.index', compact('title', 'users', 'searchTerm', 'breadcrumbs'));
     }
 }

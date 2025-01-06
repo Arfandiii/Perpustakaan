@@ -2,12 +2,14 @@
 
 namespace App\Helpers;
 
+use App\Models\Book;
+
 class DiceSimilarityHelper
 {
-    public static function calculateDiceSimilarity(array $setA, array $setB)
+    public static function calculateDiceSimilarity($tokens1, $tokens2)
     {
-        $intersection = array_intersect($setA, $setB);
-        $diceSimilarity = (2 * count($intersection)) / (count($setA) + count($setB));
+        $intersection = array_intersect($tokens1, $tokens2);
+        $diceSimilarity = (2 * count($intersection)) / (count($tokens1) + count($tokens2));
         return $diceSimilarity;
     }
 
@@ -15,17 +17,27 @@ class DiceSimilarityHelper
     {
         $TP = $FP = $FN = $TN = 0;
 
-        foreach ($predicted as $index => $value) {
-            if ($value == 1 && $actual[$index] == 1) {
-                $TP++;
-            } elseif ($value == 1 && $actual[$index] == 0) {
-                $FP++;
-            } elseif ($value == 0 && $actual[$index] == 1) {
-                $FN++;
-            } elseif ($value == 0 && $actual[$index] == 0) {
-                $TN++;
+        // Menghitung TP dan FP
+        foreach ($predicted as $predictedId) {
+            if (in_array($predictedId, $actual)) {
+                $TP++;  // Buku relevan yang diprediksi benar
+            } else {
+                $FP++;  // Buku tidak relevan yang diprediksi relevan
             }
         }
+
+        // Menghitung FN
+        foreach ($actual as $trueResult) {
+            if (!in_array($trueResult, $predicted)) {
+                $FN++;  // Buku relevan yang tidak diprediksi relevan
+            }
+        }
+
+        // TN adalah total buku - (TP + FP + FN)
+        // Menghitung TN
+        $totalBooks = Book::count();  // Mengasumsikan bahwa total buku adalah jumlah elemen di actual
+        $TN = $totalBooks - ($TP + $FP + $FN);
+
 
         return [
             'TP' => $TP,
@@ -35,21 +47,50 @@ class DiceSimilarityHelper
         ];
     }
 
-    public function calculateMetrics($TP, $FP, $FN, $TN)
+    public static function calculateMetrics($TP, $FP, $FN, $TN)
     {
-        // Precision = TP / (TP + FP)
-        $precision = $TP / ($TP + $FP);
-
-        // Recall = TP / (TP + FN)
-        $recall = $TP / ($TP + $FN);
-
-        // Accuracy = (TP + TN) / (TP + TN + FP + FN)
-        $accuracy = ($TP + $TN) / ($TP + $TN + $FP + $FN);
+        $precision = ($TP + $FP) > 0 ? $TP / ($TP + $FP) : 0;
+        $recall = ($TP + $FN) > 0 ? $TP / ($TP + $FN) : 0;
+        // $accuracy = ($TP + $TN + $FP + $FN) > 0 ? ($TP + $TN) / ($TP + $FP + $FN + $TN) : 0;
 
         return [
-            'precision' => $precision,
-            'recall' => $recall,
-            'accuracy' => $accuracy,
+            'precision' => round($precision * 100, 2),
+            'recall' => round($recall * 100, 2),
+            // 'accuracy' => round($accuracy * 100, 2),
+        ];
+    }
+
+        public static function calculateConfusionMatrixForDebug(array $predicted, array $actual)
+    {
+        $TP = $FP = $FN = $TN = 0;
+
+        // Menghitung TP dan FP
+        foreach ($predicted as $predictedId) {
+            if (in_array($predictedId, $actual)) {
+                $TP++;  // Buku relevan yang diprediksi benar
+            } else {
+                $FP++;  // Buku tidak relevan yang diprediksi relevan
+            }
+        }
+
+        // Menghitung FN
+        foreach ($actual as $trueResult) {
+            if (!in_array($trueResult, $predicted)) {
+                $FN++;  // Buku relevan yang tidak diprediksi relevan
+            }
+        }
+
+        // TN adalah total buku - (TP + FP + FN)
+        // Menghitung TN
+        $totalBooks = 10;
+        $TN = $totalBooks - ($TP + $FP + $FN);
+
+
+        return [
+            'TP' => $TP,
+            'FP' => $FP,
+            'FN' => $FN,
+            'TN' => $TN,
         ];
     }
 }

@@ -15,6 +15,16 @@
                 class="mb-4 inline-block px-6 py-2 bg-indigo-600 text-white font-bold rounded-md hover:bg-indigo-500">
                 Tambah Kelas Baru
             </a>
+            <!-- Display Success or Error Message -->
+            @if(session('success'))
+            <div class="mb-4 p-2 bg-green-100 text-green-700 rounded-md">
+                {{ session('success') }}
+            </div>
+            @elseif(session('error'))
+            <div class="mb-4 p-2 bg-red-100 text-red-700 rounded-md">
+                {{ session('error') }}
+            </div>
+            @endif
 
             <!-- Table for Edu Levels -->
             <table class="min-w-full bg-white border border-gray-200 rounded-md shadow-md">
@@ -50,16 +60,7 @@
                 </tbody>
             </table>
 
-            <!-- Display Success or Error Message -->
-            @if(session('success'))
-            <div class="mt-4 p-2 bg-green-100 text-green-700 rounded-md">
-                {{ session('success') }}
-            </div>
-            @elseif(session('error'))
-            <div class="mt-4 p-2 bg-red-100 text-red-700 rounded-md">
-                {{ session('error') }}
-            </div>
-            @endif
+
         </div>
     </div>
 </div>

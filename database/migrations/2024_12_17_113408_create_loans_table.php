@@ -17,8 +17,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // Referensi ke pengguna
             $table->foreignId('book_id')->constrained('books')->onDelete('cascade'); // Referensi ke buku
             $table->dateTime('loan_date');
-            $table->dateTime('return_date')->nullable(); // Tanggal pengembalian, bisa kosong
-            $table->enum('status', ['pending','borrowed','returned','overdue'])->default('pending'); // Status peminjaman
+            $table->integer('loan_duration'); // Durasi pinjaman dalam hari (default 5 hari)
+            $table->enum('status', ['pending','approved','rejected'])->default('pending'); // Status peminjaman
             $table->timestamps();   
         });
     }

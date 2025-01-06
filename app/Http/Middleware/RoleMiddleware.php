@@ -21,7 +21,9 @@ class RoleMiddleware
             if (Auth::user()->role === 'admin' && $request->is('dashboard')) {
                 return redirect()->route('admin.dashboard');
             }
-            abort(403, 'Unauthorized access');
+            // abort(403, 'Unauthorized access');
+            // Menampilkan halaman 403 kustom
+            return response()->view('errors.403', [], 403);
         }
         return $next($request);
     }

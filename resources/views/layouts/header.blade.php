@@ -1,5 +1,5 @@
 {{-- Navbar --}}
-<nav class="bg-gray-800" x-data="{ isOpen: false, isOn:false }">
+<nav class="bg-gray-800 w-screen" x-data="{ isOpen: false, isOn:false }">
     <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
         <div class="relative flex h-16 items-center justify-between">
             <!-- Mobile menu button-->
@@ -27,8 +27,9 @@
             <!-- Menu Link -->
             <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                 <div class="flex flex-shrink-0 items-center">
-                    <img class="h-8 w-auto" src="https://tailwindui.com/plus/img/logos/mark.svg?color=indigo&shade=500"
-                        alt="Your Company">
+                    {{-- <img class="h-8 w-auto"
+                        src="https://tailwindui.com/plus/img/logos/mark.svg?color=indigo&shade=500" alt="Your Company">
+                    --}}
                 </div>
                 <div class="hidden sm:ml-6 sm:block">
                     <div class="flex space-x-4">
@@ -54,7 +55,7 @@
                             d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                     </svg>
                 </a>
-
+                @if(auth()->user())
                 <!-- Profile dropdown -->
                 <div class="relative ml-3">
                     <div>
@@ -64,8 +65,8 @@
                             <span class="absolute -inset-1.5"></span>
                             <span class="sr-only">Open user menu</span>
                             <img class="h-8 w-8 rounded-full"
-                                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                alt="">
+                                src="{{ Auth::user()->profile_picture ? asset('storage/' . Auth::user()->profile_picture) : asset('assets/img/default-profile.png') }}"
+                                alt="{{ Auth::user()->name }}">
                         </button>
                         <div x-show="isOpen" x-transition:enter="transition ease-out duration-100 transform"
                             x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
@@ -74,13 +75,21 @@
                             class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                             role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
                             <!-- Active: "bg-gray-100", Not Active: "" -->
-                            <x-profile-dropdown href="{{ route('profile') }}" :active="request()->is('profile')">
-                                Your
-                                Profile
+                            <x-profile-dropdown href="{{ route('dashboard.user') }}"
+                                :active="request()->is('dashboard')">
+                                Dashboard
                             </x-profile-dropdown>
-                            <x-profile-dropdown href="{{ route('setting') }}" :active="request()->is('settings')">
-                                Settings
+                            <!-- Kondisi berdasarkan role -->
+                            @if (Auth::check() && Auth::user()->role === 'user')
+                            <x-profile-dropdown href="{{ route('profile') }}" :active="request()->is('profiles')">
+                                Profile Setting
                             </x-profile-dropdown>
+                            @else
+                            <x-profile-dropdown href="{{ route('admin.settings') }}"
+                                :active="request()->is('settings')">
+                                Admin Settings
+                            </x-profile-dropdown>
+                            @endif
                             <x-profile-dropdown :active="request()->is('logout')">
                                 <form action="{{ route('logout') }}" method="post"
                                     class="block w-full hover:cursor-pointer">
@@ -93,6 +102,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
                 @else
                 <!-- Login -->
                 <a href="{{ route('login') }}">

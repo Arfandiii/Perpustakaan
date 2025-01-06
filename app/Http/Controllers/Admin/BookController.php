@@ -174,7 +174,7 @@ class BookController extends Controller
             'tahun_terbit' => 'required|integer',
             'deskripsi' => 'required|string',
             'stok' => 'required|integer|min:0',
-            'cover_img' => 'nullable|image|file|mimes:jpg,png,jpeg|max:4096',
+            'cover_img' => 'nullable|image|mimes:jpg,png,jpeg|max:4096',
         ]);
 
         if ($request->hasFile('cover_img')) {
@@ -195,71 +195,6 @@ class BookController extends Controller
         return redirect()->route('admin.books.index')->with('success', 'Data buku berhasil diperbarui.');
     }
     
-    public function search(Request $request)
-    {
-        // Mendapatkan nilai pencarian dan filter
-        $query = $request->search;
-        // $query = $request->input('search');
-        $filter = $request->filter;
-
-        $title = 'List Buku';
-        // Breadcrumbs array
-        $breadcrumbs = [
-            ['name' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home'],
-            ['name' => 'Books', 'url' => route('admin.books.index'), 'icon' => 'book-list']
-        ];
-
-        // Jika input kosong, hanya kembalikan tampilan tanpa perhitungan tambahan
-        if (empty($query)) {
-            return redirect()->route('admin.books.index')->with('error', 'Silakan masukkan kata kunci pencarian.');
-        }
-
-        // Menentukan query pencarian berdasarkan filter
-        $books = Book::query();
-
-        if ($query) {
-            // Memeriksa filter yang dipilih dan membuat query pencarian yang sesuai
-            if ($filter == 'Judul') {
-                $books->where('title', 'LIKE', "%$query%");
-            } elseif ($filter == 'Penulis') {
-                $books->where('Author', 'LIKE', "%$query%");
-            } elseif ($filter == 'Penerbit') {
-                $books->where('Publisher', 'LIKE', "%$query%");
-            } elseif ($filter == 'Semua') {
-                // Jika tidak ada filter, lakukan pencarian pada semua kolom
-                $books->where(function($queryBuilder) use ($query) {
-                    $queryBuilder->where('Title', 'LIKE', "%$query%")
-                                ->orWhere('Author', 'LIKE', "%$query%")
-                                ->orWhere('Publisher', 'LIKE', "%$query%");
-                });
-            }
-        }
-
-        // Mendapatkan buku yang sesuai dengan pencarian dan filter
-        $books = $books->with('category')->latest()->paginate(10);
-
-        // Menambahkan query string agar tetap ada dalam pagination
-        $books->appends($request->all());
-        
-        return view('admin.books.index', compact('title', 'books', 'query', 'breadcrumbs', 'filter'));
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-    {
-        try {
-            $book = Book::findOrFail($id);
-            $book->delete(); // Menghapus data buku dari database
-            return redirect()->route('admin.books.index')
-            ->with('success', 'Buku berhasil dihapus.');
-        } catch (\Exception $e) {
-            return redirect()->route('admin.books.index')
-            ->with('error', 'Terjadi kesalahan saat menghapus Buku: ' . $e->getMessage());
-        }
-    }
-
     // public function search(Request $request)
     // {
     //     // Mendapatkan nilai pencarian dan filter
@@ -282,52 +217,21 @@ class BookController extends Controller
     //     $books = Book::query();
 
     //     if ($query) {
-
-    //         $keywords = explode(' ', $query); // Misalnya, ["Lala", "Handayani", "Puput", "Ratna", "Agustina"]
-            
     //         // Memeriksa filter yang dipilih dan membuat query pencarian yang sesuai
     //         if ($filter == 'Judul') {
-    //             $books->where(function($queryBuilder) use ($keywords) {
-    //                 foreach ($keywords as $keyword) {
-    //                     $queryBuilder->where('title', 'LIKE', "%$keyword%");
-    //                 }
-    //             });
+    //             $books->where('title', 'LIKE', "%$query%");
     //         } elseif ($filter == 'Penulis') {
-    //             $books->where(function($queryBuilder) use ($keywords) {
-    //                 foreach ($keywords as $keyword) {
-    //                     $queryBuilder->where('Author', 'LIKE', "%$keyword%");
-    //                 }
-    //             });
+    //             $books->where('Author', 'LIKE', "%$query%");
     //         } elseif ($filter == 'Penerbit') {
-    //             $books->where(function($queryBuilder) use ($keywords) {
-    //                 foreach ($keywords as $keyword) {
-    //                     $queryBuilder->where('Publisher', 'LIKE', "%$keyword%");
-    //                 }
-    //             });
+    //             $books->where('Publisher', 'LIKE', "%$query%");
     //         } elseif ($filter == 'Semua') {
     //             // Jika tidak ada filter, lakukan pencarian pada semua kolom
-    //             $books->where(function($queryBuilder) use ($keywords) {
-    //                 foreach ($keywords as $keyword) {
-    //                     $queryBuilder->where('Title', 'LIKE', "%$keyword%")
-    //                                 ->orWhere('Author', 'LIKE', "%$keyword%")
-    //                                 ->orWhere('Publisher', 'LIKE', "%$keyword%");
-    //                 }
+    //             $books->where(function($queryBuilder) use ($query) {
+    //                 $queryBuilder->where('Title', 'LIKE', "%$query%")
+    //                             ->orWhere('Author', 'LIKE', "%$query%")
+    //                             ->orWhere('Publisher', 'LIKE', "%$query%");
     //             });
     //         }
-    //         // if ($filter == 'Judul') {
-    //         //     $books->where('title', 'LIKE', "%$query%");
-    //         // } elseif ($filter == 'Penulis') {
-    //         //     $books->where('Author', 'LIKE', "%$query%");
-    //         // } elseif ($filter == 'Penerbit') {
-    //         //     $books->where('Publisher', 'LIKE', "%$query%");
-    //         // } elseif ($filter == 'Semua') {
-    //         //     // Jika tidak ada filter, lakukan pencarian pada semua kolom
-    //         //     $books->where(function($queryBuilder) use ($query) {
-    //         //         $queryBuilder->where('Title', 'LIKE', "%$query%")
-    //         //                     ->orWhere('Author', 'LIKE', "%$query%")
-    //         //                     ->orWhere('Publisher', 'LIKE', "%$query%");
-    //         //     });
-    //         // }
     //     }
 
     //     // Mendapatkan buku yang sesuai dengan pencarian dan filter
@@ -335,65 +239,274 @@ class BookController extends Controller
 
     //     // Menambahkan query string agar tetap ada dalam pagination
     //     $books->appends($request->all());
-
-    //     // Preprocessing untuk query pencarian
-    //     $processedQuery = TextPreprocessingHelper::preprocessText($query);
-
-    //     // Daftar prediksi dan hasil yang sebenarnya untuk menghitung confusion matrix
-    //     $predicted = [];
-    //     $actual = [];
-
-    //     // Fungsi untuk menghitung Dice Similarity untuk setiap buku
-    //     foreach ($books as $book) {
-    //         $similarity = 0;
-    //         $match = 0;
-
-    //         // Tentukan teks yang akan dibandingkan (judul, penulis, penerbit)
-    //         if ($filter == 'Judul') {
-    //             $processedBookTitle = TextPreprocessingHelper::preprocessText($book->title);
-    //             $similarity = DiceSimilarityHelper::calculateDiceSimilarity($processedQuery, $processedBookTitle);
-    //             $match = $similarity > 0.5 ? 1 : 0;  // Jika similarity > 0.5, dianggap match (1)
-    //         } elseif ($filter == 'Penulis') {
-    //             $processedBookAuthor = TextPreprocessingHelper::preprocessText($book->author);
-    //             $similarity = DiceSimilarityHelper::calculateDiceSimilarity($processedQuery, $processedBookAuthor);
-    //             $match = $similarity > 0.5 ? 1 : 0;  // Jika similarity > 0.5, dianggap match (1)
-    //         } elseif ($filter == 'Penerbit') {
-    //             $processedBookPublisher = TextPreprocessingHelper::preprocessText($book->publisher);
-    //             $similarity = DiceSimilarityHelper::calculateDiceSimilarity($processedQuery, $processedBookPublisher);
-    //             $match = $similarity > 0.5 ? 1 : 0;  // Jika similarity > 0.5, dianggap match (1)
-    //         } elseif ($filter == 'Semua') {
-    //             // Hitung kesamaan untuk semua kolom jika filter "Semua"
-    //             $processedBookTitle = TextPreprocessingHelper::preprocessText($book->title);
-    //             $processedBookAuthor = TextPreprocessingHelper::preprocessText($book->author);
-    //             $processedBookPublisher = TextPreprocessingHelper::preprocessText($book->publisher);
-
-    //             $similarity = max(
-    //                 DiceSimilarityHelper::calculateDiceSimilarity($processedQuery, $processedBookTitle),
-    //                 DiceSimilarityHelper::calculateDiceSimilarity($processedQuery, $processedBookAuthor),
-    //                 DiceSimilarityHelper::calculateDiceSimilarity($processedQuery, $processedBookPublisher)
-    //             );
-    //             $match = $similarity > 0.5 ? 1 : 0;  // Jika similarity > 0.5, dianggap match (1)
-    //         }
-
-    //         // Tambahkan nilai Dice Similarity ke dalam objek buku
-    //         $book->similarity = $similarity;
-    //         // Simpan prediksi dan hasil yang sebenarnya untuk matriks kebingunguan
-    //         $predicted[] = $match;  // Prediksi (1 = match, 0 = tidak match)
-    //         $actual[] = $book->is_match;  // Asumsikan is_match adalah nilai yang menyatakan apakah buku ini relevan dengan pencarian (1 atau 0)
-    //     }
-    //     // Menghitung confusion matrix
-    //     $confusionMatrix = DiceSimilarityHelper::calculateConfusionMatrix($predicted, $actual);
-
-    //     // Menghitung metrik lainnya (Precision, Recall, F1-Score)
-    //     // $metrics = DiceSimilarityHelper::calculateMetrics(
-    //     //     $confusionMatrix['TP'],
-    //     //     $confusionMatrix['FP'],
-    //     //     $confusionMatrix['FN'],
-    //     //     $confusionMatrix['TN']
-    //     // );
-
-    //     // Return view dengan data buku yang sudah dihitung similarity-nya
-    //     return view('admin.books.index', compact('title', 'books', 'query', 'breadcrumbs', 'filter', 'confusionMatrix'));
+        
+    //     return view('admin.books.index', compact('title', 'books', 'query', 'breadcrumbs', 'filter', ));
     // }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id)
+    {
+        try {
+            $book = Book::findOrFail($id);
+            $book->delete(); // Menghapus data buku dari database
+            return redirect()->route('admin.books.index')
+            ->with('success', 'Buku berhasil dihapus.');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.books.index')
+            ->with('error', 'Terjadi kesalahan saat menghapus Buku: ' . $e->getMessage());
+        }
+    }
+
+    public function search(Request $request)
+    {
+        // Mendapatkan nilai pencarian dan filter
+        $query = $request->search;
+        $filter = $request->filter;
+
+        $title = 'List Buku';
+        // Breadcrumbs array
+        $breadcrumbs = [
+            ['name' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home'],
+            ['name' => 'Books', 'url' => route('admin.books.index'), 'icon' => 'book-list']
+        ];
+
+        // Jika input kosong, hanya kembalikan tampilan tanpa perhitungan tambahan
+        if (empty($query)) {
+            return redirect()->route('admin.books.index')->with('error', 'Silakan masukkan kata kunci pencarian.');
+        }
+
+        $books = Book::with('category')->get();
+        
+        // Inisialisasi array untuk hasil perhitungan
+        $results = [];
+        
+        // Tokenisasi dan Preprocessing Query
+        // Jika query ada, lakukan preprocessing
+        $processedQuery = [];
+        if ($query) {
+            $processedQuery = TextPreprocessingHelper::preprocessText($query);
+            // dd($processedQuery);
+            
+            foreach($books as $book){
+                
+                if ($filter == 'Judul') {
+                    // Preprocessing berdasarkan judul buku
+                    $processedBook = TextPreprocessingHelper::preprocessText($book['title']);
+                    // dd($processedBook);
+                } elseif ($filter == 'Penulis') {
+                    $processedBook = TextPreprocessingHelper::preprocessText($book['author']);
+                    // dd($processedBook);
+                } elseif ($filter == 'Penerbit') {
+                    $processedBook = TextPreprocessingHelper::preprocessText($book['publisher']);
+                    // dd($processedBook);
+                } elseif ($filter == 'Semua') {
+                    $processedBook = TextPreprocessingHelper::preprocessText($book['title'] . ' ' . $book['author'] . ' ' . $book['publisher']);
+                    // dd($processedBook);
+                }
+
+                // $processedBookTitle = TextPreprocessingHelper::preprocessText($book['title']);
+                // Hitung Dice Similarity antara query dan deskripsi buku
+                $diceSimilarity = DiceSimilarityHelper::calculateDiceSimilarity($processedQuery, $processedBook);
+                // dd($diceSimilarity);
+                if ($diceSimilarity > 0) {
+                    $results[] = [
+                        'id' => $book['id'],
+                        'title' => $book['title'],
+                        'author' => $book['author'],
+                        'publisher' => $book['publisher'],
+                        'category' => $book['category']['name'],
+                        'stock' => $book['stock'],
+                        'slug' => $book['slug'],
+                        'similarity' => $diceSimilarity
+                    ];
+                }
+                // dd($results);
+            }
+        }
+
+        // Hitung Confusion Matrix dan Metrik Evaluasi
+        // Misalnya kita anggap prediksi berdasarkan threshold similarity > 0.4 dianggap relevan (1), lainnya dianggap tidak relevan (0)
+        $predicted = array_map(function($result) {
+            return $result['similarity'] >= 0.3 ? $result['id'] : null;
+        }, $results);
+        $predicted = array_filter($predicted);
+
+        // ambil buku yang relevan dari data buku berdasarkan query
+        $actual = $this->getTrueResultsFromDatabase($processedQuery, $filter);
+
+
+        // Hitung Confusion Matrix
+        $confusionMatrix = DiceSimilarityHelper::calculateConfusionMatrix($predicted, $actual);
+        
+        // Hitung Precision, Recall, Accuracy
+        $metrics = DiceSimilarityHelper::calculateMetrics(
+            $confusionMatrix['TP'],
+            $confusionMatrix['FP'],
+            $confusionMatrix['FN'],
+            $confusionMatrix['TN']
+        );
+        
+        // Urutkan hasil berdasarkan nilai similarity
+        usort($results, function($a, $b) {
+            return $b['similarity'] <=> $a['similarity'];
+        });
+
+        // Pagination: Ambil data pada halaman tertentu
+        $perPage = 5; // Jumlah hasil per halaman
+        $page = $request->get('page', 1); // Mendapatkan nomor halaman dari query string
+        $results = collect($results);
+        $paginatedResults = $results->forPage($page, $perPage); // Ambil hasil untuk halaman tertentu
+
+        // Hitung jumlah total halaman
+        $total = count($results);
+        $lastPage = (int) ceil($total / $perPage); // Menghitung total halaman
+
+        return view('admin.books.index', compact('title', 'breadcrumbs', 'filter', 'books', 'query', 'processedQuery', 'results', 'confusionMatrix', 'metrics', 'paginatedResults', 'lastPage', 'page', 'total'));
+    }
+
+    private function getTrueResultsFromDatabase($query, $filter)
+    {
+        $keywords = $query;
+        $books = Book::with('category')->get();
+        // Mencari buku relevan yang judulnya mengandung salah satu kata kunci
+        $relevantBooks = [];
+        // Query database dengan filter
+        $books = Book::with('category')
+            ->where(function($queryBuilder) use ($keywords, $filter) {
+                // Menentukan kolom mana yang akan dipakai berdasarkan filter
+                if ($filter == 'Judul') {
+                    foreach ($keywords as $keyword) {
+                        $queryBuilder->orWhere('title', 'LIKE', '%' . $keyword . '%');
+                    }
+                } elseif ($filter == 'Penulis') {
+                    foreach ($keywords as $keyword) {
+                        $queryBuilder->orWhere('author', 'LIKE', '%' . $keyword . '%');
+                    }
+                } elseif ($filter == 'Penerbit') {
+                    foreach ($keywords as $keyword) {
+                        $queryBuilder->orWhere('publisher', 'LIKE', '%' . $keyword . '%');
+                    }
+                } elseif ($filter == 'Semua') {
+                    foreach ($keywords as $keyword) {
+                        $queryBuilder->orWhere('title', 'LIKE', '%' . $keyword . '%')
+                                    ->orWhere('author', 'LIKE', '%' . $keyword . '%')
+                                    ->orWhere('publisher', 'LIKE', '%' . $keyword . '%');
+                    }
+                }
+            })->get();
+            // Mengumpulkan ID buku yang relevan dari hasil query
+        foreach ($books as $book) {
+            $relevantBooks[] = $book->id;
+        }
+
+        return $relevantBooks; // Mengembalikan array ID buku yang relevan
+    }
+
+    public function searchBookUser(Request $request)
+    {
+        // Mendapatkan nilai pencarian dan filter
+        $query = $request->search;
+        $filter = $request->filter;
+
+        $title = 'Katalog Buku';
+        // Breadcrumbs array
+
+        // Jika input kosong, hanya kembalikan tampilan tanpa perhitungan tambahan
+        if (empty($query)) {
+            return redirect()->route('catalog')->with('error', 'Silakan masukkan kata kunci pencarian.');
+        }
+
+        $books = Book::with('category')->get();
+        
+        // Inisialisasi array untuk hasil perhitungan
+        $results = [];
+        
+        // Tokenisasi dan Preprocessing Query
+        // Jika query ada, lakukan preprocessing
+        $processedQuery = [];
+        if ($query) {
+            $processedQuery = TextPreprocessingHelper::preprocessText($query);
+            // dd($processedQuery);
+            
+            foreach($books as $book){
+                
+                if ($filter == 'Judul') {
+                    // Preprocessing berdasarkan judul buku
+                    $processedBook = TextPreprocessingHelper::preprocessText($book['title']);
+                    // dd($processedBook);
+                } elseif ($filter == 'Penulis') {
+                    $processedBook = TextPreprocessingHelper::preprocessText($book['author']);
+                    // dd($processedBook);
+                } elseif ($filter == 'Penerbit') {
+                    $processedBook = TextPreprocessingHelper::preprocessText($book['publisher']);
+                    // dd($processedBook);
+                } elseif ($filter == 'Semua') {
+                    $processedBook = TextPreprocessingHelper::preprocessText($book['title'] . ' ' . $book['author'] . ' ' . $book['publisher']);
+                    // dd($processedBook);
+                }
+
+                // $processedBookTitle = TextPreprocessingHelper::preprocessText($book['title']);
+                // Hitung Dice Similarity antara query dan deskripsi buku
+                $diceSimilarity = DiceSimilarityHelper::calculateDiceSimilarity($processedQuery, $processedBook);
+                // dd($diceSimilarity);
+                if ($diceSimilarity > 0) {
+                    $results[] = [
+                        'id' => $book['id'],
+                        'title' => $book['title'],
+                        'author' => $book['author'],
+                        'publisher' => $book['publisher'],
+                        'category' => $book['category']['name'],
+                        'stock' => $book['stock'],
+                        'description' => $book['description'],
+                        'cover_image' => $book['cover_image'],
+                        'slug' => $book['slug'],
+                        'similarity' => $diceSimilarity
+                    ];
+                }
+                // dd($results);
+            }
+        }
+
+        // Hitung Confusion Matrix dan Metrik Evaluasi
+        // Misalnya kita anggap prediksi berdasarkan threshold similarity > 0.4 dianggap relevan (1), lainnya dianggap tidak relevan (0)
+        $predicted = array_map(function($result) {
+            return $result['similarity'] >= 0.3 ? $result['id'] : null;
+        }, $results);
+        $predicted = array_filter($predicted);
+
+        // ambil buku yang relevan dari data buku berdasarkan query
+        $actual = $this->getTrueResultsFromDatabase($processedQuery, $filter);
+
+
+        // Hitung Confusion Matrix
+        $confusionMatrix = DiceSimilarityHelper::calculateConfusionMatrix($predicted, $actual);
+        
+        // Hitung Precision, Recall, Accuracy
+        $metrics = DiceSimilarityHelper::calculateMetrics(
+            $confusionMatrix['TP'],
+            $confusionMatrix['FP'],
+            $confusionMatrix['FN'],
+            $confusionMatrix['TN']
+        );
+        
+        // Urutkan hasil berdasarkan nilai similarity
+        usort($results, function($a, $b) {
+            return $b['similarity'] <=> $a['similarity'];
+        });
+
+        // Pagination: Ambil data pada halaman tertentu
+        $perPage = 12; // Jumlah hasil per halaman
+        $page = $request->get('page', 1); // Mendapatkan nomor halaman dari query string
+        $results = collect($results);
+        $paginatedResults = $results->forPage($page, $perPage); // Ambil hasil untuk halaman tertentu
+
+        // Hitung jumlah total halaman
+        $total = count($results);
+        $lastPage = (int) ceil($total / $perPage); // Menghitung total halaman
+
+        return view('catalog', compact('title', 'filter', 'books', 'query', 'processedQuery', 'results', 'confusionMatrix', 'metrics', 'paginatedResults', 'lastPage', 'page', 'total'));
+    }
 
 }

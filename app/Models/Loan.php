@@ -11,13 +11,12 @@ class Loan extends Model
         'user_id', // Menambahkan user_id ke fillable
         'book_id',
         'loan_date',
-        'return_date',
+        'loan_duration',
         'status', // Jika ada kolom untuk tanggal pengembalian
     ];
     // Di dalam model Loan
     protected $casts = [
         'loan_date' => 'datetime',
-        'return_date' => 'datetime',
     ];
 
     public function user()
@@ -28,5 +27,11 @@ class Loan extends Model
     public function book()
     {
         return $this->belongsTo(Book::class);
+    }
+
+    // Relasi ke LoanBook
+    public function loanBooks()
+    {
+        return $this->hasOne(LoanBook::class);
     }
 }

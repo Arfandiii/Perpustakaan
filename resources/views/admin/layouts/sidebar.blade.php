@@ -37,16 +37,13 @@
             <x-nav-link-admin iconType="users">Manajemen Pengguna</x-nav-link-admin>
         </a>
         <a href="{{ route('admin.books.index') }}">
-            <x-nav-link-admin iconType="books">Katalog Buku</x-nav-link-admin>
+            <x-nav-link-admin iconType="books">Manajemen Buku</x-nav-link-admin>
         </a>
         <a href="{{ route('admin.loans.index') }}">
-            <x-nav-link-admin iconType="borrowings">Peminjaman</x-nav-link-admin>
+            <x-nav-link-admin iconType="borrowings">Manajemen Peminjaman</x-nav-link-admin>
         </a>
-        <a href="{{ route('admin.reviews.index') }}">
-            <x-nav-link-admin iconType="reviews">Ulasan</x-nav-link-admin>
-        </a>
-        <a href="{{ route('admin.reports.index') }}">
-            <x-nav-link-admin iconType="settings">Pengaturan</x-nav-link-admin>
+        <a href="{{ route('dicesimilarity.index') }}">
+            <x-nav-link-admin iconType="settings">Dice Similarity</x-nav-link-admin>
         </a>
     </div>
     <!-- MINI SIDEBAR-->
@@ -63,10 +60,7 @@
         <a href="{{ route('admin.loans.index') }}">
             <x-nav-link-mini-admin iconType="borrowings"></x-nav-link-mini-admin>
         </a>
-        <a href="{{ route('admin.reviews.index') }}">
-            <x-nav-link-mini-admin iconType="reviews"></x-nav-link-mini-admin>
-        </a>
-        <a href="{{ route('admin.reports.index') }}">
+        <a href="{{ route('dicesimilarity.index') }}">
             <x-nav-link-mini-admin iconType="settings"></x-nav-link-mini-admin>
         </a>
     </div>

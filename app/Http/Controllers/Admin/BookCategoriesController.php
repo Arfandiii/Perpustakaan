@@ -14,10 +14,44 @@ class BookCategoriesController extends Controller
     public function index()
     {
         $title = 'Kategori Buku';
-        $bookCategories = BookCategory::all();
-        return view('admin.books.categories.index', compact('title', 'bookCategories'));
-    }
+        $breadcrumbs = [
+            ['name' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home'],
+            ['name' => 'Books', 'url' => route('admin.books.index'), 'icon' => 'book-list'],
+            ['name' => 'Kategori Buku', 'url' => route('admin.categories.index'), 'icon' => 'category-book'],
+        ];
 
+        $bookCategories = BookCategory::all();
+        return view('admin.books.categories.index', compact('title', 'bookCategories', 'breadcrumbs'));
+    }
+    // public function index()
+    // {
+    //     $title = 'Kategori kelas';
+    //     // Breadcrumbs array
+    //     $breadcrumbs = [
+    //         ['name' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home'],
+    //         ['name' => 'Users', 'url' => route('admin.users.index'), 'icon' => 'user-group'],
+    //         ['name' => 'Kelas', 'url' => route('admin.edu-levels.index'), 'icon' => 'edu-level'],
+    //     ];
+    //     $eduLevels = EduLevel::all();
+    //     return view('admin.users.eduLevels.index', compact('title', 'eduLevels', 'breadcrumbs'));
+    // }
+
+    // /**
+    //  * Show the form for creating a new resource.
+    //  */
+    // public function create()
+    // {
+    //     $title = 'Tambah Kategori Kelas';
+        
+    //     // Breadcrumbs array
+    //     $breadcrumbs = [
+    //         ['name' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home'],
+    //         ['name' => 'Users', 'url' => route('admin.users.index'), 'icon' => 'user-group'],
+    //         ['name' => 'Kelas', 'url' => route('admin.edu-levels.index'), 'icon' => 'edu-level'],
+    //         ['name' => 'Tambah Kelas', 'url' => route('admin.edu-levels.create'), 'icon' => 'create']
+    //     ];
+    //     return view('admin.users.eduLevels.create', compact('title', 'breadcrumbs'));
+    // }
     /**
      * Show the form for creating a new resource.
      */
@@ -25,8 +59,14 @@ class BookCategoriesController extends Controller
     {
         
         $title = 'Tambah Kategori Buku';
+        $breadcrumbs = [
+            ['name' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home'],
+            ['name' => 'Books', 'url' => route('admin.books.index'), 'icon' => 'book-list'],
+            ['name' => 'Kategori Buku', 'url' => route('admin.categories.index'), 'icon' => 'category-book'],
+            ['name' => 'Tambah Kategori Buku', 'url' => route('admin.categories.create'), 'icon' => 'create']
+        ];
         $bookCategories = BookCategory::all();
-        return view('admin.books.categories.create', compact('title', 'bookCategories'));
+        return view('admin.books.categories.create', compact('title', 'bookCategories', 'breadcrumbs'));
     }
 
     /**

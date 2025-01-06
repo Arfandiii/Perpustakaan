@@ -72,26 +72,8 @@
                 </button>
             </a>
         </div>
-        @if (count($books) > 0)
-
-        <div class="mb-4 flex space-x-4 p-4">
-            <div class="p-4 rounded-lg bg-gray-100 w-1/5">
-                <h3>Confusion Matrix</h3>
-                <p>True Positive (TP): </p>{{-- {{ $tp }} --}}
-                <p>False Positive (FP): </p>{{-- {{ $fp }} --}}
-                <p>True Negative (TN): </p>{{-- {{ $tn }} --}}
-                <p>False Negative (FN): </p>{{-- {{ $fn }} --}}
-            </div>
-            <div class="p-4 rounded-lg bg-gray-100 w-1/5">
-                <h3>Hasil Lainnya</h3>
-                <p>Accuracy: {{-- {{ number_format($accuracy * 100, 2) }} --}}%</p>
-                <p>Accuracy: {{-- {{ number_format($accuracy * 100, 2) }} --}}%</p>
-                <p>Accuracy: {{-- {{ number_format($accuracy * 100, 2) }} --}}%</p>
-            </div>
-        </div>
         @endif
-        @endif
-
+        @if (empty($results))
         <!-- Book Table -->
         <div class="overflow-x-auto mb-4">
             <table class="min-w-full bg-white border-collapse">
@@ -104,16 +86,14 @@
                         <th class="text-left py-3 px-6 font-semibold text-gray-600">Kategori</th>
                         <th class="text-left py-3 px-6 font-semibold text-gray-600">Stok</th>
                         <th class="text-left py-3 px-10 font-semibold text-gray-600">Aksi</th>
-                        @if(request()->has('search') && count($books) > 0)
-                        <th class="text-left py-3 px-6 font-semibold text-gray-600">Similarity</th>
-                        @endif
                     </tr>
                 </thead>
                 <tbody class="text-gray-700">
                     <!-- Example User Row -->
-                    @forelse ($books as $book)
+                    @foreach ($books as $book)
                     <tr class="border-b">
-                        <td class="py-4 px-6">{{ $loop->iteration }}</td>
+                        <td class="py-4 px-6">{{ (($books->currentPage() - 1) * $books->perPage()) + $loop->iteration }}
+                        </td>
                         <td class="py-4 px-6">{{ Str::limit($book->title, 60) }}</td>
                         <td class="py-4 px-6">{{ $book->author }}</td>
                         <td class="py-4 px-6">{{ $book->publisher }}</td>
@@ -168,9 +148,104 @@
                                 </form>
                             </div>
                         </td>
-                        @if(request()->has('search') )
-                        {{-- <td class="py-4 px-6">{{ $similarity }}</td> --}}
-                        @endif
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        <div>
+            {{ $books->links() }}
+        </div>
+        @else
+        <div class="mb-4 flex space-x-4 p-4">
+            <div class="p-4 rounded-lg bg-gray-100 w-1/5">
+                <h3>Confusion Matrix</h3>
+                <p>True Positive (TP): {{ $confusionMatrix['TP'] ?? '-' }}</p>
+                <p>False Positive (FP): {{ $confusionMatrix['FP'] ?? '-' }}</p>
+                <p>True Negative (TN): {{ $confusionMatrix['TN'] ?? '-' }}</p>
+                <p>False Negative (FN): {{ $confusionMatrix['FN'] ?? '-' }}</p>
+            </div>
+            <div class="p-4 rounded-lg bg-gray-100 w-1/5">
+                <h3>Metrik</h3>
+                <p>Precision: {{ $metrics['precision'] ?? '-' }}%</p>
+                <p>Recall: {{ $metrics['recall'] ?? '-' }}%</p>
+            </div>
+        </div>
+        <!-- Book Table Result -->
+        <div class="overflow-x-auto mb-4">
+            <table class="min-w-full bg-white border-collapse">
+                <thead class="text-gray-700">
+                    <tr class="border-y">
+                        <th class="text-left py-3 px-6 font-semibold text-gray-600">ID</th>
+                        <th class="text-left py-3 px-6 font-semibold text-gray-600">Judul Buku</th>
+                        <th class="text-left py-3 px-6 font-semibold text-gray-600">Penulis</th>
+                        <th class="text-left py-3 px-6 font-semibold text-gray-600">Penerbit</th>
+                        <th class="text-left py-3 px-6 font-semibold text-gray-600">Kategori</th>
+                        <th class="text-left py-3 px-6 font-semibold text-gray-600">Stok</th>
+                        <th class="text-left py-3 px-10 font-semibold text-gray-600">Aksi</th>
+                        <th class="text-left py-3 px-6 font-semibold text-gray-600">Similarity</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700">
+                    <!-- Example User Row -->
+                    @forelse ($paginatedResults as $result)
+                    <tr class="border-b">
+                        <td class="py-4 px-6">{{ $result['id'] }}</td>
+                        <td class="py-4 px-6">{{ Str::limit($result['title'], 60) }}</td>
+                        <td class="py-4 px-6">{{ $result['author'] }}</td>
+                        <td class="py-4 px-6">{{ $result['publisher'] }}</td>
+                        <td class="py-4 px-6">{{ $result['category'] }}</td>
+                        <td class="py-4 px-6">{{ $result['stock'] }}</td>
+                        <td class="py-4 px-10">
+                            <div class="flex space-x-2">
+                                <!-- Manage Button -->
+                                <div class="relative before:content-[attr(data-tip)] before:absolute before:px-2 before:py-1 before:left-1/2 before:-top-3 before:w-max before:max-w-xs before:-translate-x-1/2 before:-translate-y-full before:bg-gray-700 before:text-white before:rounded-md before:opacity-0 before:transition-all after:absolute after:left-1/2 after:-top-3 after:h-0 after:w-0 after:-translate-x-1/2 after:border-8 after:border-t-gray-700 after:border-l-transparent after:border-b-transparent after:border-r-transparent after:opacity-0 after:transition-all hover:before:opacity-100 hover:after:opacity-100"
+                                    data-tip="Manage Buku">
+                                    <a href="{{ route('admin.books.show', $result['slug']) }}"
+                                        class="flex items-center justify-center w-8 h-8 text-white transition-colors duration-150 rounded-full bg-indigo-600 hover:bg-blue-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                            class="size-5 fill-current">
+                                            <path fill-rule="evenodd"
+                                                d="M1.5 5.625c0-1.036.84-1.875 1.875-1.875h17.25c1.035 0 1.875.84 1.875 1.875v12.75c0 1.035-.84 1.875-1.875 1.875H3.375A1.875 1.875 0 0 1 1.5 18.375V5.625ZM21 9.375A.375.375 0 0 0 20.625 9h-7.5a.375.375 0 0 0-.375.375v1.5c0 .207.168.375.375.375h7.5a.375.375 0 0 0 .375-.375v-1.5Zm0 3.75a.375.375 0 0 0-.375-.375h-7.5a.375.375 0 0 0-.375.375v1.5c0 .207.168.375.375.375h7.5a.375.375 0 0 0 .375-.375v-1.5Zm0 3.75a.375.375 0 0 0-.375-.375h-7.5a.375.375 0 0 0-.375.375v1.5c0 .207.168.375.375.375h7.5a.375.375 0 0 0 .375-.375v-1.5ZM10.875 18.75a.375.375 0 0 0 .375-.375v-1.5a.375.375 0 0 0-.375-.375h-7.5a.375.375 0 0 0-.375.375v1.5c0 .207.168.375.375.375h7.5ZM3.375 15h7.5a.375.375 0 0 0 .375-.375v-1.5a.375.375 0 0 0-.375-.375h-7.5a.375.375 0 0 0-.375.375v1.5c0 .207.168.375.375.375Zm0-3.75h7.5a.375.375 0 0 0 .375-.375v-1.5A.375.375 0 0 0 10.875 9h-7.5A.375.375 0 0 0 3 9.375v1.5c0 .207.168.375.375.375Z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                    </a>
+                                </div>
+                                <!-- Edit Button -->
+                                <div class="relative before:content-[attr(data-tip)] before:absolute before:px-2 before:py-1 before:left-1/2 before:-top-3 before:w-max before:max-w-xs before:-translate-x-1/2 before:-translate-y-full before:bg-gray-700 before:text-white before:rounded-md before:opacity-0 before:transition-all after:absolute after:left-1/2 after:-top-3 after:h-0 after:w-0 after:-translate-x-1/2 after:border-8 after:border-t-gray-700 after:border-l-transparent after:border-b-transparent after:border-r-transparent after:opacity-0 after:transition-all hover:before:opacity-100 hover:after:opacity-100"
+                                    data-tip="Edit Buku">
+                                    <a href="{{ route('admin.books.edit', $result['id']) }}"
+                                        class="flex items-center justify-center w-8 h-8 text-white transition-colors duration-150 rounded-full bg-green-600 hover:bg-green-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                            class="size-5 fill-current">
+                                            <path
+                                                d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32l8.4-8.4Z" />
+                                            <path
+                                                d="M5.25 5.25a3 3 0 0 0-3 3v10.5a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3V13.5a.75.75 0 0 0-1.5 0v5.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5V8.25a1.5 1.5 0 0 1 1.5-1.5h5.25a.75.75 0 0 0 0-1.5H5.25Z" />
+                                        </svg>
+                                    </a>
+                                </div>
+                                <form action="{{ route('admin.books.destroy', $result['id']) }}" method="POST"
+                                    class="inline-block ml-2">
+                                    @csrf
+                                    @method('DELETE')
+                                    <div class="relative before:content-[attr(data-tip)] before:absolute before:px-2 before:py-1 before:left-1/2 before:-top-3 before:w-max before:max-w-xs before:-translate-x-1/2 before:-translate-y-full before:bg-gray-700 before:text-white before:rounded-md before:opacity-0 before:transition-all after:absolute after:left-1/2 after:-top-3 after:h-0 after:w-0 after:-translate-x-1/2 after:border-8 after:border-t-gray-700 after:border-l-transparent after:border-b-transparent after:border-r-transparent after:opacity-0 after:transition-all hover:before:opacity-100 hover:after:opacity-100"
+                                        data-tip="Delete Buku">
+                                        <button type="submit"
+                                            onclick="return confirm('Apakah Anda yakin ingin menghapus buku {{ $result['title'] }} ini?')"
+                                            class="flex items-center justify-center w-8 h-8 text-white transition-colors duration-150 rounded-full bg-red-600 hover:bg-red-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                                fill="currentColor" class="size-5 fill-current">
+                                                <path fill-rule="evenodd"
+                                                    d="M16.5 4.478v.227a48.816 48.816 0 0 1 3.878.512.75.75 0 1 1-.256 1.478l-.209-.035-1.005 13.07a3 3 0 0 1-2.991 2.77H8.084a3 3 0 0 1-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 0 1-.256-1.478A48.567 48.567 0 0 1 7.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 0 1 3.369 0c1.603.051 2.815 1.387 2.815 2.951Zm-6.136-1.452a51.196 51.196 0 0 1 3.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 0 0-6 0v-.113c0-.794.609-1.428 1.364-1.452Zm-.355 5.945a.75.75 0 1 0-1.5.058l.347 9a.75.75 0 1 0 1.499-.058l-.346-9Zm5.48.058a.75.75 0 1 0-1.498-.058l-.347 9a.75.75 0 0 0 1.5.058l.345-9Z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6">{{ number_format($result['similarity'] * 100, 2)}} %</td>
                     </tr>
                     @empty
                     <tr class="border-b">
@@ -186,10 +261,45 @@
                 </tbody>
             </table>
         </div>
+        <!-- Menampilkan link pagination -->
+        <div class="flex justify-center mt-6">
+            <nav class="inline-flex items-center space-x-2">
+                <!-- Previous Button -->
+                @if ($page > 1)
+                <a href="{{ route('admin.books.search', ['search' => request('search'), 'filter' => request('filter'), 'page' => $page - 1]) }}"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Prev
+                </a>
+                @else
+                <span
+                    class="px-4 py-2 text-sm font-medium text-gray-300 bg-white border border-gray-300 rounded-lg cursor-not-allowed">
+                    Prev
+                </span>
+                @endif
 
-        <div>
-            {{ $books->links() }}
+                <!-- Page Numbers -->
+                @for ($i = 1; $i <= $lastPage; $i++) <a
+                    href="{{ route('admin.books.search', ['search' => request('search'), 'filter' => request('filter'), 'page' => $i]) }}"
+                    class="px-4 py-2 text-sm font-medium {{ $i == $page ? 'text-white bg-blue-600' : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-100' }} rounded-lg">
+                    {{ $i }}
+                    </a>
+                    @endfor
+
+                    <!-- Next Button -->
+                    @if ($page < $lastPage) <a
+                        href="{{ route('admin.books.search', ['search' => request('search'), 'filter' => request('filter'), 'page' => $page + 1]) }}"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        Next
+                        </a>
+                        @else
+                        <span
+                            class="px-4 py-2 text-sm font-medium text-gray-300 bg-white border border-gray-300 rounded-lg cursor-not-allowed">
+                            Next
+                        </span>
+                        @endif
+            </nav>
         </div>
+        @endif
     </div>
 </div>
 @endsection

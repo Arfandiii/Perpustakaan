@@ -5,15 +5,18 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Book;
 use App\Models\Loan;
+use App\Models\LoanBook;
 use Illuminate\Support\Facades\Auth; // Pastikan ini ada di bagian atas file controller
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class LoanController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $title = 'List Peminjaman';
 
@@ -22,8 +25,28 @@ class LoanController extends Controller
             ['name' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home'],
             ['name' => 'Peminjaman', 'url' => route('admin.loans.index'), 'icon' => 'loan-list']
         ];
+        
+        $status = $request->query('status');
+        $search = $request->query('search');
 
-        $loans = Loan::with('user', 'book')->latest()->paginate(10);
+        // Initialize the loan query
+        $loans = Loan::with('user', 'book')
+            ->when($status, function ($query) use ($status) {
+                $query->where('status', $status);
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->whereHas('user', function ($query) use ($search) {
+                        $query->where('name', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('book', function ($query) use ($search) {
+                        $query->where('title', 'like', '%' . $search . '%');
+                    });
+                });
+            })
+            ->latest()
+            ->paginate(10);
+
         $loans->appends(request()->query());
 
         return view('admin.loans.index', compact('title', 'breadcrumbs', 'loans'));
@@ -72,56 +95,41 @@ class LoanController extends Controller
     {
         $user = Auth::user();
         $book = Book::where('slug', $slug)->firstOrFail();
-
-        // Pastikan stok buku tersedia
+        
+        // Validasi stok buku
         if ($book->stock <= 0) {
-            return redirect()->back()->with('error', 'Buku tidak tersedia.');
+            return redirect()->back()->with('error', 'Stok buku tidak tersedia.');
         }
-
+        
+        // Validasi input durasi
+        $request->validate([
+            'duration' => 'required|integer|in:5,7,14',
+        ]);
+        
         // Cek apakah user sudah mengajukan peminjaman buku ini sebelumnya
         $existingLoan = Loan::where('user_id', $user->id)
-                            ->where('book_id', $book->id)
-                            ->where('status', 'pending')
-                            ->first();
-
+        ->where('book_id', $book->id)
+        ->where('status', 'pending')
+        ->first();
+        
         if ($existingLoan) {
-            return redirect()->route('loans.confirmLoan', $book->slug)->with('info', 'Pengajuan peminjaman Anda sudah ada dalam antrian.');
+            return redirect()->route('loans.confirmLoan', $book->slug)
+            ->with('info', 'Pengajuan peminjaman Anda sudah ada dalam antrian.');
         }
-
+        
         // Kurangi stok buku
-        $book->stock -= 1;
-        $book->save();
+        $book->decrement('stock');
 
         // Simpan data peminjaman
         Loan::create([
-            'user_id' => Auth::user()->id,
+            'user_id' => $user->id,
             'book_id' => $book->id,
-            'loan_date' => now()->toDateString(),
-            'status' => 'pending', // Status peminjaman
+            'loan_date' => now(),
+            'loan_duration' => $request->duration,
+            'status' => 'pending', // Status awal adalah pending
         ]);
-
-        return redirect()->back()->with('success', 'Peminjaman berhasil, tunggu konfirmasi dari admin');
-    }
-
-    public function approveLoan($loanId)
-    {
-        $loan = Loan::findOrFail($loanId);
-        $loan->status = 'approved';
-        $loan->save();
-
-        // Decrease book stock
-        $loan->book->decrement('stock');
-
-        return redirect()->route('admin.loans.index')->with('success', 'Peminjaman disetujui.');
-    }
-
-    public function rejectLoan($loanId)
-    {
-        $loan = Loan::findOrFail($loanId);
-        $loan->status = 'rejected';
-        $loan->save();
-
-        return redirect()->route('admin.loans.index')->with('success', 'Peminjaman ditolak.');
+        
+        return redirect()->back()->with('success', 'Peminjaman berhasil diajukan dengan durasi ' . $request->duration . ' hari. Tunggu konfirmasi dari admin.');
     }
 
     /**
@@ -141,51 +149,156 @@ class LoanController extends Controller
         // Breadcrumbs array
         $breadcrumbs = [
             ['name' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home'],
-            ['name' => 'Peminjaman', 'url' => route('admin.loans.index'), 'icon' => 'loan-list']
+            ['name' => 'Peminjaman', 'url' => route('admin.loans.index'), 'icon' => 'loan-list'],
+            ['name' => 'Detail Peminjaman', 'url' => route('admin.loans.show', $loan), 'icon' => 'loan-book']
         ];
-        return view('admin.loans.show', compact('loan', 'title', 'breadcrumbs'));
+
+        // Ambil data dari relasi loanBook
+        $loanBook = $loan->loanBooks;
+
+        return view('admin.loans.show', compact('loan', 'loanBook', 'title', 'breadcrumbs'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Loan $loan)
     {
-        //
+        $title = 'Manage Peminjaman Buku';
+        // Breadcrumbs array
+        $breadcrumbs = [
+            ['name' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home'],
+            ['name' => 'Peminjaman', 'url' => route('admin.loans.index'), 'icon' => 'loan-list'],
+            ['name' => 'Detail Peminjaman', 'url' => route('admin.loans.show', $loan), 'icon' => 'loan-book'],
+            ['name' => 'Peminjaman', 'url' => route('admin.loans.index'), 'icon' => 'edit'],
+        ];
+        
+        return view('admin.loans.edit', compact('loan', 'title', 'breadcrumbs'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Loan $loan)
+    // public function update(Request $request, Loan $loan)
+    // {
+    //     $validated = $request->validate([
+    //         'loan_date' => 'required|date',
+    //         'return_date' => 'required|date',
+    //         'status' => 'required|in:borrowed,returned,overdue',
+    //     ]);
+        
+    //     // Validasi status peminjaman
+    //     if ($validated['status'] === 'borrowed' && !$validated['return_date']) {
+    //         return back()->withErrors(['return_date' => 'Tanggal pengembalian harus diatur.']);
+    //     }
+        
+        
+    //     // Update data peminjaman
+    //     $loan->update([
+    //         'loan_date' => $validated['loan_date'],
+    //         'return_date' => $validated['return_date'],
+    //         'status' => $validated['status'],
+    //     ]);
+
+    //     return redirect()->route('admin.loans.index')->with('success', 'Peminjaman berhasil diperbarui.');
+    // }
+    public function update(Request $request, $id)
     {
-        $validated = $request->validate([
-            'loan_date' => 'required|date',
+        $loan = Loan::findOrFail($id);
+        $book = $loan->book; // Relasi ke tabel books
+
+        // Pastikan return_date yang diberikan valid
+        $returnDate = $request->return_date ? Carbon::parse($request->return_date) : null;
+
+        // Handle action: approve
+        if ($request->action === 'approve') {
+            if ($loan->status !== 'pending') {
+                return redirect()->route('admin.loans.index')->with('error', 'Status peminjaman tidak valid untuk disetujui.');
+            }
+
+            // Pindahkan data ke tabel loan_book
+            LoanBook::create([
+                'loan_id' => $loan->id,
+                'status' => 'borrowed',
+                'return_date' => $returnDate ? $returnDate : now()->addDays($loan->loan_duration), // Gunakan return_date manual jika ada
+            ]);
+
+            // Perbarui status loan menjadi approved
+            $loan->update(['status' => 'approved']);
+
+            return redirect()->route('admin.loans.index')->with('success', 'Pengajuan berhasil disetujui.');
+        }
+
+        // Handle action: reject
+        if ($request->action === 'reject') {
+            if ($loan->status !== 'pending') {
+                return redirect()->route('admin.loans.index')->with('error', 'Status peminjaman tidak valid untuk ditolak.');
+            }
+
+            // Kembalikan stok buku karena pengajuan ditolak
+            $book->increment('stock');
+
+            // Perbarui status loan menjadi rejected
+            $loan->update(['status' => 'rejected']);
+
+            return redirect()->route('admin.loans.index')->with('success', 'Pengajuan berhasil ditolak.');
+        }
+
+        // Jika aksi tidak valid
+        return redirect()->back()->with('error', 'Aksi tidak valid.');
+    }
+
+
+    public function updateStatus(Request $request, $id)
+    {
+        $loanBook = LoanBook::findOrFail($id);
+
+        // Validasi input data
+        $request->validate([
             'return_date' => 'required|date',
             'status' => 'required|in:borrowed,returned,overdue',
         ]);
-        
-        // Validasi status peminjaman
-        if ($validated['status'] === 'borrowed' && !$validated['return_date']) {
-            return back()->withErrors(['return_date' => 'Tanggal pengembalian harus diatur.']);
-        }
-        
-        
-        // Update data peminjaman
-        $loan->update([
-            'loan_date' => $validated['loan_date'],
-            'return_date' => $validated['return_date'],
-            'status' => $validated['status'],
+
+        // Perbarui tanggal pengembalian dan status
+        $loanBook->update([
+            'return_date' => Carbon::parse($request->return_date),
+            'status' => $request->status,
         ]);
 
-        return redirect()->route('admin.loans.index')->with('success', 'Peminjaman berhasil diperbarui.');
+        return redirect()->route('admin.loans.index')
+            ->with('success', 'Data peminjaman buku berhasil diperbarui.');
+
     }
+
+    public function updateLoanBook($id)
+    {
+        $loanBook = LoanBook::findOrFail($id); // Ambil data loan_book berdasarkan ID
+
+        $title = 'Manage Peminjaman Buku';
+        // Breadcrumbs array
+        $breadcrumbs = [
+            ['name' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home'],
+            ['name' => 'Peminjaman', 'url' => route('admin.loans.index'), 'icon' => 'loan-list'],
+            ['name' => 'Detail Peminjaman', 'url' => route('admin.loans.show', $id), 'icon' => 'loan-book'],
+            ['name' => 'Edit Peminjaman', 'url' => route('admin.loans.editLoanBook', $id), 'icon' => 'edit'],
+        ];
+        return view('admin.loans.edit-loan-book', compact('loanBook', 'title', 'breadcrumbs'));
+    }   
+
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        try {
+            $book = Loan::findOrFail($id);
+            $book->delete(); // Menghapus data buku dari database
+            return redirect()->route('admin.loans.index')
+            ->with('success', 'Data peminjaman berhasil dihapus.');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.loans.index')
+            ->with('error', 'Terjadi kesalahan saat menghapus data peminjaman: ' . $e->getMessage());
+        }
     }
 }

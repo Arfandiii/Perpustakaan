@@ -8,7 +8,6 @@
     <div class="p-6 max-w-7xl mx-auto bg-white rounded-lg shadow-md my-10">
         <div class="relative mb-4">
             <form action="{{ route('admin.users.search') }}" method="GET">
-                @csrf
                 <input type="search"
                     class="px-3 py-2 bg-white placeholder:text-neutral-500 border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-indigo-500 block w-full rounded-md sm:text-sm focus:ring-1"
                     placeholder="Search" aria-label="Search" id="search" name="search" value="{{ request('search') }}"
@@ -25,6 +24,11 @@
         @if(session('info'))
         <div class="bg-yellow-500 text-white p-3 rounded mb-4">
             {{ session('info') }}
+        </div>
+        @endif
+        @if (session()->has('error'))
+        <div class="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert">
+            <p>{{ session('error')}}</p>
         </div>
         @endif
         <!-- Header -->

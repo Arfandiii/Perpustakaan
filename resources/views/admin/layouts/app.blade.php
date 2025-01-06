@@ -20,7 +20,7 @@
     @include('admin.layouts.sidebar')
 
     <!-- Content -->
-    <div class="container">
+    <div class="container mx-auto">
         @yield('content')
         <!-- Konten spesifik halaman -->
     </div>
@@ -108,6 +108,21 @@
             }
     </script>
     <script>
+        const updateDateTime = () => {
+        const dateTimeElement = document.getElementById('current-date-time');
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const now = new Date();
+        
+        const date = now.toLocaleDateString('id-ID', options); // Format tanggal
+        const time = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); // Format waktu
+        
+        dateTimeElement.textContent = `${date}, ${time}`; // Gabungkan tanggal dan waktu
+    };
+    
+    updateDateTime(); // Set tanggal dan waktu pertama kali
+    setInterval(updateDateTime, 1000); // Perbarui setiap detik
+    </script>
+    {{-- <script>
         // Peminjaman Buku (Bar Chart)
         const borrowCtx = document.getElementById('borrowChart').getContext('2d');
         new Chart(borrowCtx, {
@@ -181,7 +196,7 @@
                 }
             }
         });
-    </script>
+    </script> --}}
     {{-- <script>
         const borrowData = @json($borrowData);
         const categoryData = @json($categoryData);
