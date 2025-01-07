@@ -53,9 +53,10 @@ Route::middleware(['auth'])->group(function () {
     // Admin Dashboard
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-        Route::get('/admin/settings', [AdminDashboardController::class, 'setting'])->name('settings');
-        Route::post('/admin/settings/change-password', [AdminDashboardController::class, 'changePassword'])->name('changePassword');
-        Route::put('/admin/settings/update-profile', [AdminDashboardController::class, 'updateProfile'])->name('updateProfile');
+        Route::get('/settings', [AdminDashboardController::class, 'setting'])->name('settings');
+        Route::get('/notification', [AdminDashboardController::class, 'notification'])->name('notification');
+        Route::post('/settings/change-password', [AdminDashboardController::class, 'changePassword'])->name('changePassword');
+        Route::put('/settings/update-profile', [AdminDashboardController::class, 'updateProfile'])->name('updateProfile');
         Route::get('/users/search', [UserController::class, 'search'])->name('users.search');
         Route::get('/books/search', [BookController::class, 'search'])->name('books.search');
         

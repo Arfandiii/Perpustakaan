@@ -164,6 +164,9 @@ class DashboardController extends Controller
         return redirect()->back()->with('success', 'Profil berhasil diperbarui!');
     }
 
-
-
+    public function notification()
+    {
+        $title = "Notification";
+        return view('admin.errors.404', compact('title'));
+    }
 }

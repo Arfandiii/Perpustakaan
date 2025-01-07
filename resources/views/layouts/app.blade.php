@@ -10,7 +10,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
-<body class="h-full overflow-x-hidden ">
+<body class="h-full overflow-x-hidden">
     <div class="min-h-full">
         <!-- Navbar -->
         @include('layouts.header')

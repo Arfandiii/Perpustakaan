@@ -34,9 +34,6 @@
                 <li class="font-normal text-lg"><span class="font-semibold text-xl">Tahun Terbit:</span>
                     {{
                     $book->published_year }}</li>
-                <li class="font-normal text-lg"><span class="font-semibold text-xl">Stock:</span> {{
-                    $book->stock }}
-                </li>
                 <li class="font-normal text-lg"><span class="font-semibold text-xl">Stock Tersedia:</span> {{
                     $book->stock }}
                 </li>
